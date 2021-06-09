@@ -1,0 +1,137 @@
+<!--begin.rcode
+library(readr)
+insurance_modified <- read_csv("C:/Users/Nicole/Desktop/620/C__Users_Nicole_Desktop_620_insurance_modified.csv")
+View(insurance_modified)
+end.rcode-->
+
+
+<!--begin.rcode
+# variables 
+children <- insurance_modified$children
+charges <- insurance_modified$charges
+age<- insurance_modified$age
+bmi <- insurance_modified$bmi
+smkr <- insurance_modified$smoker_code
+sex <- insurance_modified$sex_code
+bmi_smkr <- bmi*smkr
+
+# Modified variables 
+# square for scaling purposes 
+charges_sqr <- (insurance_modified$charges)^2
+end.rcode-->
+
+
+<!--begin.rcode
+hist(age,
+    main="Age Distribution",
+    xlab="Age",
+    xlim=c(10,70),
+    col="darkmagenta",
+    breaks=20)
+end.rcode-->
+
+<!--begin.rcode
+hist(charges,
+    main="Patient Cost Ditribution",
+    xlab="Cost in Dollars",
+    xlim=c(10000,70000),
+    ylim=c(0,150),
+    col="green",
+    breaks=35)
+end.rcode-->
+
+<!--begin.rcode
+library(ggplot2)
+boxplot(charges,
+xlab = "Cost in Dollars",
+col = "yellow",
+border = "black",
+horizontal = TRUE)
+
+end.rcode-->
+
+<!--begin.rcode
+hist(bmi,
+    main="BMI Ditribution",
+    xlab="kg/m2",
+    col="orange",
+    breaks=20)
+end.rcode-->
+
+<!--begin.rcode
+plot(sex, charges, pch = 19, col = "red")
+plot(age, charges, pch = 19, col = "orange")
+plot(bmi,charges, pch = 19, col = "green")
+end.rcode-->
+
+<!--begin.rcode
+library(mosaic)
+favstats(age)
+end.rcode-->
+
+<!--begin.rcode
+favstats(age)
+favstats(charges)
+favstats(bmi)
+favstats(children)
+end.rcode-->
+
+###Regressions 
+
+<!--begin.rcode
+# Slope dummy variable
+reg_1 <- lm( log(charges) ~ age+bmi+smkr+bmi_smkr, data= insurance_modified)
+summary(reg_1)
+
+
+reg_1a <- lm(charges~ age+bmi+smkr+bmi_smkr, data= insurance_modified)
+summary(reg_1a)
+end.rcode-->
+
+
+<!--begin.rcode
+plot(age,reg_1$residuals^2)
+plot(bmi,reg_1$residuals^2)
+plot(smkr,reg_1$residuals^2)
+plot(bmi_smkr,reg_1$residuals^2)
+end.rcode-->
+
+<!--begin.rcode
+nobs(reg_1)
+skewness(insurance_modified)
+end.rcode-->
+
+<!--begin.rcode
+reg_a <- lm( log(charges) ~ bmi+smkr, data= insurance_modified)
+summary(reg_a)
+end.rcode-->
+
+<!--begin.rcode
+reg_b <- lm (log (charges) ~ I(bmi+smkr), data= insurance_modified)
+summary(reg_b)
+end.rcode-->
+
+<!--begin.rcodea
+anova(reg_a, reg_b)
+end.rcode-->
+
+<!--begin.rcode
+library(moments)
+skewness(age)
+skewness(log(charges))
+skewness(charges)
+skewness(bmi)
+end.rcode-->
+
+
+<!--begin.rcode
+library(lmtest)
+mod_a <- coeftest(reg_a, vcov= vcov(reg_a, type = "HCO"))
+mod_b <- coeftest(reg_b, vcov= vcov(reg_, type = "HCO"))
+anova(mod_a,mod_b)
+
+end.rcode-->
+
+
+
+
