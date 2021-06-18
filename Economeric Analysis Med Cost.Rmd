@@ -1,0 +1,241 @@
+---
+title: "Econometric Analysis of Personal Medical Cost "
+output: html_document
+self_contained: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data Set Introduction 
+The data set was sourced from Kaggle: <https://www.kaggle.com/mirichoi0218/insurance>
+The dataset has 6 columns: 
+<ul>
+<li>age=  patient age in years</li>
+<li>sex=  biological sex of the patient</li>
+<li>Bmi=  body mass index measured in kg/m^2. BMI is a measure of body fat where bmi > 25 is considered overweight , bmi> 30 is considered obese and bmi > 35  is extremely obese</li>
+<li>children= number of children  </li>
+<li>charges= medical cost in dollars </li> 
+</ul>
+For our purposes, the variables sex and smoker were coverted to binary variables where:
+<ul>
+<li>sex_code= value is 1 when if patient is female; 0 otherwise </li>
+<li>smoker_code= value is 1 when if patient has smoking history ; 0 otherwise</li> 
+</ul>
+
+<p>This dataset does not have any missing values and contains 1,338 unique patient entries.We are not going to include the number of children in any of our analysis. Without a formal literature review, we suspect that bmi, smoking history and gender might be relevant indicators for medical cost.  It should be noted that the dataset does not contain any data on diagnosis types and therefore any conclusions that we derive from this data set is bound to be very general.</p> 
+
+
+
+
+```{r}
+library(readr)
+#Upload Dataset
+insurance_modified <- read_csv("C:/Users/Nicole/Desktop/620/C__Users_Nicole_Desktop_620_insurance_modified.csv")
+View(insurance_modified)
+
+# name the variables 
+children <- insurance_modified$children
+charges <- insurance_modified$charges
+age<- insurance_modified$age
+bmi <- insurance_modified$bmi
+smkr <- insurance_modified$smoker_code
+sex <- insurance_modified$sex_code
+bmi_smkr <- bmi*smkr
+
+# Modified variables 
+# square for scaling purposes 
+charges_sqr <- (insurance_modified$charges)^2
+
+```
+
+
+##Descriptive Statistics
+###Histograms of each variable and corresponding box plots
+
+```{r age}
+#Histogram of age variable 
+hist(age,
+    main="Age Distribution",
+    xlab="Age",
+    xlim=c(10,70),
+    col="darkmagenta",
+    breaks=20)
+```
+
+```{r}
+library(ggplot2)
+boxplot(age,
+xlab = "Age in Years ",
+col = "orange",
+border = "black",
+horizontal = TRUE)
+
+```
+
+```{r}
+library(mosaic)
+favstats(age)
+```
+
+```{r charges}
+#Histogram of charges variable
+hist(charges,
+    main="Patient Cost Ditribution",
+    xlab="Cost in Dollars",
+    xlim=c(10000,70000),
+    ylim=c(0,150),
+    col="green",
+    breaks=35)
+```
+
+```{r}
+library(ggplot2)
+boxplot(charges,
+xlab = "Cost in Dollars",
+col = "yellow",
+border = "black",
+horizontal = TRUE)
+```
+
+```{r}
+favstats(charges)
+```
+
+
+```{r bmi}
+hist(bmi,
+    main="BMI Ditribution",
+    xlab="kg/m^2",
+    col="orange",
+    breaks=20)
+
+```
+
+
+```{r}
+library(ggplot2)
+boxplot(bmi,
+xlab = "BMI in kg/m^2 ",
+col = "purple",
+border = "black",
+horizontal = TRUE)
+```
+
+```{r}
+favstats(bmi)
+```
+
+###Exploratory Analysis of the Predictors Relative to Dependent Variable
+
+```{r}
+plot(sex, charges, pch = 19, col = "red", main= "Figure A. Charges by Sex")
+plot(age, charges, pch = 19, col = "orange", main= "Figure B. Charges by Age")
+plot(bmi,charges, pch = 19, col = "green",main= "Figure C. Charges by BMI")
+plot(smkr,charges, pch = 19, col = "purple", main= "Figure D. Charges by Smoking History")
+```
+
+In Figure A, we can see that there is  no significant difference between the overall expenditure between women and men in this data set. In contrast, Figure C. shows that smokers tend to have higher max expenditure as well as higher minimum expenditure compared to the non-smoker group. In figure B we can see that across the age groups, there is a general increase in expenditure as age goes up but there seems to be tiers of expenditure for each age group as well. The 3 distinct clusters are parallel. The first cluster is the group with charges < 10k. The second cluster is the group with charges between 10k - 20k while the third cluster hovered between 30k - 40k.
+
+ Lastly, figure D shows a cluster of observations with a BMI between 20 to 40 with expenditures < 15k while a separate cluster above the main cluster hovered between 15k and 30k. A less dense cluster is present around expenditure  > 30k. From all these insights, it would seem that BMI and smoking history are predictors that  we should explore. 
+
+##Statistical Analysis 
+###A.Assessing Heteroskedasticity Graphically 
+
+```{r pressure, echo=FALSE}
+reg_1 <- lm( log(charges) ~ age+bmi+smkr+bmi_smkr, data= insurance_modified)
+#summary(reg_1)
+```
+
+```{r}
+plot(age,reg_1$residuals^2)
+plot(bmi,reg_1$residuals^2)
+plot(smkr,reg_1$residuals^2)
+plot(bmi_smkr,reg_1$residuals^2)
+```
+
+It is evident that we have some level of heteroskedasticity in all of the variables notably bmi and age. We are able to visually observe heteroskedasticity in these graphs through the spreading of data points from the main clusters of datapoints.There is also a lot of variability among non-smokers that is reflected in the interaction variable bmi_smkr but nonetheless, we can see the minor dispersal of data points between 2 distinct clusters in bmi_smkr.
+
+###B.Analysis
+####Initial Regression Variables
+  Since we are interested in capturing the difference in marginal effect of smoker history on charges, we included the variable smkr as a slope dummy variable. Bmi and smoking history might be relevant medical cost drivers and so we are also interested to see the change in the marginal effect of smkr (or having smoking history) on charges  due to 1 unit change in  bmi.  Therefore, an interaction variable called bmi_smkr was included in our model. Finally, the independent variables were chosen based on our exploratory analysis.
+  <ul>
+<li>Dependent Variable= charges</li>
+<li>Independent Variables = age , bmi, smkr and bmi_smkr</li>
+<li>Dummy variable= smkr </li>
+<li>Interaction variable = bmi_smkr</li>
+  </ul>
+
+<p>H0: B2= B3= 0 
+<p>H1: B2= B3 not equal to 0 
+
+**Model:  charges = B0 + B1age + B2bmi + B3 smkr + B4 bmi_smkr + u**
+  
+```{r}
+reg_1a <- lm(charges~ age+bmi+smkr+bmi_smkr, data= insurance_modified)
+summary(reg_1a)
+```
+**Coefficient Interpretation**
+<p>In examining the resulting coefficients, we can see that our current model will need to be modified. While the R^2 value tells us that the model explains ~ 84% of the variability in the data set, the intercept and the smkr coefficient have significantly high standard errors and therefore might be inaccurate representations of the true population mean. Hence, any interpretations of the given coefficients will most likely not be useful.
+
+**Fixed Functional Form**
+ <ul>
+<li>Dependent Variable= log(charges)</li>
+<li>Independent Variables = age , bmi, smkr and bmi_smkr</li>
+<li>Dummy variable= smkr </li>
+<li>Interaction variable = bmi_smkr</li>
+  </ul>
+Now, we are using log on the variable 'charges' in order to fix the positive skew in 'charges'. The semi-log form also helps us provide a better interpretation by referring to the changes in terms of percentages as opposed to the raw dollar values which can be large. The same Null hypothesis and Alternative hypothesis are used.
+
+<p>**log(charges) = B0 + B1age + B2bmi + B3 smkr + B4 bmi_smkr + u **
+<p>H0:  B2 =B3 =  0
+<p>H1:  B2= B3 not equal to 0 
+
+We use Robust Standard errors to address the heteroskedasticity in our data set. 
+```{r}
+library(lmtest)
+coeftest(reg_1, vcov= vcov(reg_1, type = "HCO"))
+
+```
+We use an T- test at 95% level of significance to test our hypothesis for B2 ie. bmi variable.  
+ <ul>
+<li>T crit: 1.960</li>
+<li>T stat : 0.4987</li>
+</ul>
+
+Since our t stat is less than our T crit, we are unable to reject the null hypothesis. For B3 which is our smkr variable: 
+ <ul>
+<li>T crit: 1.960</li>
+<li>T stat : 1.3451</li>
+</ul>
+
+Since our t stat is less than our T crit, we are unable to reject the null hypothesis. 
+
+**Analysis and Conclusion**
+<p>Immediately, we can see from both the regression results and the results of the coefficient test that the standard errors for all  variables decreased in part due to our scaling efforts with 'charges'.  Overall, the intercept, age and the interaction variable bmi_smkr are significant at 99 % significance level while bmi and smkr are not even significant at 95 % significance level. Hence, we were not able to reject our stated null hypothesis.  An R^2 score of ~ 76% indicates that this model is decent but not the best. The model resulted in the following interpretations:
+
+When all variables are 0, then the log of charges is about 14.72 which is significant at 99% significance level.
+
+One unit increase in age results in 7% increase in charges which is significant at 99% significance level. 
+
+One unit increase in bmi results in .2% increase in charges. This result is not significant  even at 95% significance level. 
+
+Smoking history results in 41% increase in charges but this result is not significant even at 95% significance level. 
+
+However, the change in the marginal effect of smoking history on charges due to 1 unit increase in bmi causes an increase of ~ 9% in charges and this result is significant at 99% significance level.  
+
+Hence, for this specific set of patients, smoking history and high bmi are only significant cost drivers when both factors are present in the patient's health record with age being the second cost driver for this set of patients.  
+
+
+
+
+
+
+
+
+
+
+
+
+
