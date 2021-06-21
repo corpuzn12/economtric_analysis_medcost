@@ -21,8 +21,26 @@ For our purposes, the variables sex and smoker were coverted to binary variables
 
 <p>This dataset does not have any missing values and contains 1,338 unique patient entries.We are not going to include the number of children in any of our analysis. Without a formal literature review, we suspect that bmi, smoking history and gender might be relevant indicators for medical cost.  It should be noted that the dataset does not contain any data on diagnosis types and therefore any conclusions that we derive from this data set is bound to be very general.</p> 
 
-## Analysis and Conclusion
-<p>Immediately, we can see from both the regression results and the results of the coefficient test that the standard errors for all  variables decreased in part due to our scaling efforts with ‘charges’.  Overall, the intercept, age and the interaction variable bmi_smkr are significant at 99 % significance level while bmi and smkr are not even significant at 95 % significance level. Hence, we were not able to reject our stated null hypothesis.  An R^2 score of ~ 76% indicates that this model is decent but not the best. The model resulted in the following interpretations:
+## Analysis
+**Fixed Functional Form**
+<ul>
+<li>Dependent Variable= log(charges)</li>
+<li>Independent Variables = age , bmi, smkr and bmi_smkr </li>
+<li>Dummy variable= smkr </li>
+  <li>Interaction variable = bmi_smkr</li>
+</ul>
+<p>Now, we are using log on the variable 'charges' in order to fix the positive skew in 'charges'. The semi-log form also helps us provide a better interpretation by referring to the changes in terms of percentages as opposed to the raw dollar values which can be large. The same Null hypothesis and Alternative hypothesis are used.</p> 
+
+**log(charges) = B0 + B1age + B2bmi + B3 smkr + B4 bmi_smkr + u**
+
+H0: B2 =B3 = 0
+
+H1: B2= B3 not equal to 0
+
+We used Robust Standard errors to address the heteroskedasticity in our data set.
+
+## Conclusion
+<p> The regression results and the results of the coefficient show that the standard errors for all  variables decreased in part due to our scaling efforts with ‘charges’.  Overall, the intercept, age and the interaction variable bmi_smkr are significant at 99 % significance level while bmi and smkr failed to be significant at 95 % significance level. Hence, we are not able to reject our stated null hypothesis.  An R^2 score of ~ 76% indicates that this model is decent but not the best. The model resulted in the following interpretations:
 
 When all variables are 0, then the log of charges is about 14.72 which is significant at 99% significance level.
 
